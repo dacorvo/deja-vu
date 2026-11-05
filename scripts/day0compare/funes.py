@@ -2,16 +2,13 @@
 # layout (the same sessions sit under both roots), then run every question
 # through `funes recall` and look for the answer session's id in the result
 # headers, in rank order. Usage:
-#   FUNES=/path/to/funes python3 funes.py <keep-dir> [--half-life N]
+#   FUNES=/path/to/funes python3 funes.py <keep-dir>
 # The header line of a hit shortens the id to eight characters; the full one
 # is on the line under it:
 #   → get answer_355c48bb --from 0 --to 3 --memory …
 import json, os, re, subprocess, sys, time
 S = sys.argv[1]
 FUNES = os.environ.get('FUNES', 'funes')
-half = None
-if '--half-life' in sys.argv:
-    half = sys.argv[sys.argv.index('--half-life') + 1]
 home = os.path.join(S, 'home')
 env = dict(os.environ, HOME=home)
 corpus = os.path.join(home, '.claude', 'projects')
@@ -29,8 +26,6 @@ for q in qs:
     # Results are passages; ask for 200 passages reranked from 500 candidates
     # and rank the first 50 distinct sessions they belong to.
     args = [FUNES, 'recall', q['question'], '-k', '200', '--candidates', '500']
-    if half is not None:
-        args += ['--half-life', half]
     t1 = time.time()
     r = subprocess.run(args, capture_output=True, text=True, env=env)
     dt = time.time() - t1; lat.append(dt)
@@ -47,4 +42,4 @@ for q in qs:
         if rank < 5: hit5 += 1
 lat.sort()
 print(f'funes index {build:.0f}s first {first*1000:.0f}ms p50 {lat[len(lat)//2]*1000:.0f}ms '
-      f'hit@1 {hit1}/{len(qs)} hit@5 {hit5}/{len(qs)} found@50 {found}/{len(qs)} half-life {half or "default"}')
+      f'hit@1 {hit1}/{len(qs)} hit@5 {hit5}/{len(qs)} found@50 {found}/{len(qs)}')
