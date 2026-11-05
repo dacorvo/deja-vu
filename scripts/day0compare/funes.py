@@ -9,7 +9,7 @@
 #   FUNES=/path/to/funes python3 funes.py <keep-dir>
 # The header line of a hit shortens the id to eight characters; the full one
 # is on the line under it:
-#   → get answer_355c48bb --from 0 --to 3 --memory …
+#   → get answer_355c48bb --from 0 --to 3
 import glob, json, os, re, shutil, subprocess, sys, time
 S = sys.argv[1]
 FUNES = os.environ.get('FUNES', 'funes')
