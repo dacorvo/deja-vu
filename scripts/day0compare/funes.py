@@ -1,21 +1,45 @@
-# Score Hugging Face funes over the day0bench corpus: `funes index` the Claude
-# layout (the same sessions sit under both roots), then run every question
-# through `funes recall` and look for the answer session's id in the result
-# headers, in rank order. Usage:
+# Score Hugging Face funes over the day0bench corpus. funes indexes only
+# .funes.jsonl turns files, which each agent's separate integration converts
+# from that agent's sessions. `funes add claude` would also install the
+# integration's hooks into Claude Code, and its converter needs jq, so the
+# build writes those turns files itself from the Claude layout (the same
+# sessions sit under both roots) and indexes them. Then every question goes
+# through `funes recall`, and the answer session's id is looked for in the
+# hits, in rank order. Usage:
 #   FUNES=/path/to/funes python3 funes.py <keep-dir>
 # The header line of a hit shortens the id to eight characters; the full one
 # is on the line under it:
 #   → get answer_355c48bb --from 0 --to 3 --memory …
-import json, os, re, subprocess, sys, time
+import glob, json, os, re, shutil, subprocess, sys, time
 S = sys.argv[1]
 FUNES = os.environ.get('FUNES', 'funes')
 home = os.path.join(S, 'home')
 env = dict(os.environ, HOME=home)
 corpus = os.path.join(home, '.claude', 'projects')
+turns = os.path.join(S, 'funes-turns')
 memory = os.path.join(home, '.funes', 'memory')
 t0 = time.time()
 if not os.path.exists(memory):
-    r = subprocess.run([FUNES, 'index', corpus, '--harness', 'claude', '--yes', '--no-thinking'],
+    srcs = glob.glob(os.path.join(corpus, '*', '*.jsonl'))
+    os.makedirs(turns, exist_ok=True)
+    for src in srcs:
+        sid = os.path.basename(src)[:-len('.jsonl')]
+        out = os.path.join(turns, sid + '.funes.jsonl')
+        seq = 0
+        with open(src) as f, open(out, 'w') as o:
+            for r in map(json.loads, f):
+                c = r['message']['content']
+                texts = [c] if isinstance(c, str) else [b['text'] for b in c if b['type'] == 'text']
+                blocks = [{'block_type': 'text', 'text': t} for t in texts if t.strip()]
+                if blocks:
+                    o.write(json.dumps({'format': 1, 'session_id': sid, 'turn_uuid': r['uuid'], 'seq': seq,
+                                        'ts': r['timestamp'], 'role': r['message']['role'],
+                                        'blocks': blocks, 'harness': 'claude'}) + '\n')
+                    seq += 1
+        # Keep the transcript's mtime: funes indexes a directory newest file first.
+        shutil.copystat(src, out)
+    print('converted', len(srcs), f'transcripts in {time.time() - t0:.0f}s')
+    r = subprocess.run([FUNES, 'index', turns, '--yes', '--no-thinking'],
                        capture_output=True, text=True, env=env)
     print('index rc', r.returncode, (r.stdout + r.stderr)[-400:])
 build = time.time() - t0

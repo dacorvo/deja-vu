@@ -28,10 +28,11 @@ rule, so the numbers on the site's day-zero page can be reproduced end to end.
 
        SERVER='["deja","mcp"]' python3 scripts/day0compare/toolcost.py
 
-   funes indexes the Claude layout in full (`funes index <path> --yes`, about
-   two hours of local embedding for 19k sessions); its first recall downloads
-   ~1.1 GB of models, and the header shortens session ids, so the driver reads
-   the full id from the `→ get` line. agentmemory needs its worker running first (`agentmemory` with
+   The funes driver turns each Claude transcript into a `.funes.jsonl` file
+   under `/tmp/day0/funes-turns`, then `funes index <dir> --yes` reads them all.
+   Its first recall downloads ~1.1 GB of models, and the header shortens
+   session ids, so the driver reads the full id from the `→ get` line.
+   agentmemory needs its worker running first (`agentmemory` with
    `HOME`/`AGENTMEMORY_DATA_DIR` set) and imports in batches of at most 1000
    files, its own cap; the driver builds the batches. agentsview searches through
    its daemon; the driver starts it after `agentsview sync` and stops it at the
