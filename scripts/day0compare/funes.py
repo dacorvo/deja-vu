@@ -21,6 +21,9 @@ memory = os.path.join(home, '.funes', 'memory')
 t0 = time.time()
 if not os.path.exists(memory):
     srcs = glob.glob(os.path.join(corpus, '*', '*.jsonl'))
+    with open(srcs[0]) as f:
+        if 'uuid' not in json.loads(f.readline()):
+            sys.exit('the corpus has no message uuids: lay it down again with the current day0bench')
     os.makedirs(turns, exist_ok=True)
     for src in srcs:
         sid = os.path.basename(src)[:-len('.jsonl')]
