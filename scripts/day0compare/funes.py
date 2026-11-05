@@ -45,6 +45,10 @@ if not os.path.exists(memory):
     r = subprocess.run([FUNES, 'index', turns, '--yes', '--no-thinking'],
                        capture_output=True, text=True, env=env)
     print('index rc', r.returncode, (r.stdout + r.stderr)[-400:])
+    # A rejected turns file fails the run but leaves the rest indexed: stop
+    # rather than score a partial index.
+    if r.returncode:
+        sys.exit(1)
 build = time.time() - t0
 qs = json.load(open(os.path.join(S, 'questions.json')))
 hit1 = hit5 = found = 0; first = None; lat = []
