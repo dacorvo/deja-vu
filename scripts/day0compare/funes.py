@@ -14,7 +14,7 @@ import glob, json, os, re, shutil, subprocess, sys, time
 S = sys.argv[1]
 FUNES = os.environ.get('FUNES', 'funes')
 home = os.path.join(S, 'home')
-env = dict(os.environ, HOME=home)
+env = dict(os.environ, HOME=home, FUNES_HOME=os.path.join(home, '.funes'))
 corpus = os.path.join(home, '.claude', 'projects')
 turns = os.path.join(S, 'funes-turns')
 memory = os.path.join(home, '.funes', 'memory')
