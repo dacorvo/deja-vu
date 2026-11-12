@@ -73,11 +73,12 @@ send({'method': 'notifications/initialized'})
 hit1 = hit5 = found = 0; first = None; lat = []
 head = re.compile(r'^\s*→ get (\S+) --from', re.M)
 for n, q in enumerate(qs, 1):
-    # Results are passages; ask for 200 passages reranked from 500 candidates
-    # and rank the first 50 distinct sessions they belong to.
+    # Results are passages: ask for 50, as the MemPalace and agentmemory
+    # drivers do, from a pool of 51, since funes reranks only a pool larger
+    # than the hits it returns. Then rank the sessions they belong to.
     t1 = time.time()
     r = call(n, 'tools/call', {'name': 'recall', 'arguments': {
-        'query': q['question'], 'k': 200, 'candidates': 500}})
+        'query': q['question'], 'k': 50, 'candidates': 51}})
     dt = time.time() - t1; lat.append(dt)
     if first is None: first = dt
     text = ''.join(c.get('text', '') for c in r['content'])
