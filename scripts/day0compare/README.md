@@ -30,6 +30,7 @@ rule, so the numbers on the site's day-zero page can be reproduced end to end.
 
    The funes driver turns each Claude transcript into a `.funes.jsonl` file
    under `/tmp/day0/funes-turns`, then `funes index <dir> --yes` reads them all.
+   Every question goes to one `funes mcp` server, so the models load once.
    Its first recall downloads ~1.1 GB of models, and the header shortens
    session ids, so the driver reads the full id from the `→ get` line.
    agentmemory needs its worker running first (`agentmemory` with
